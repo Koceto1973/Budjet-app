@@ -33,10 +33,22 @@ var UIController =( function(){
 // global app controller
 var appController = ( function(budjet,UI){
 
-    var DOM = UI.getDOMstrings();
+    var setupEventListeners = function() {
+        var DOM = UI.getDOMstrings();
+        
+        document.querySelector(DOM.inputBtn).addEventListener('click', addItem);
+        
+        document.addEventListener('keypress',function(event){
+            if ( event.keyCode === 13 || event.which === 13 ) { // event.which for older browsers
+                addItem();
+            }
+        });
+    }   
 
     function addItem() {
         // accept input
+        var input = UI.getInput();
+        console.log(input);
 
         // update budjet
 
@@ -46,16 +58,17 @@ var appController = ( function(budjet,UI){
 
         // display budjet
 
-        console.log("Ouch!");
-    }
-    // by click event
-    document.querySelector(DOM.inputBtn).addEventListener('click', addItem);
-    // or by keypress enter
-    document.addEventListener('keypress',function(event){
-        if ( event.keyCode === 13 || event.which === 13 ) { // event.which for older browsers
-            addItem();
+    } 
+    
+    return {
+        init: function() {
+            console.log('App has started!');
+            setupEventListeners();
         }
-    });
+    }
 
 })(budjetController,UIController);
+
+// app entry point
+appController.init();
 
