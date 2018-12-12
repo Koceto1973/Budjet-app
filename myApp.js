@@ -108,6 +108,21 @@ var UIController =( function(){
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
         },
 
+        clearFields: function() {
+            var fields, fieldsArr;
+            
+            fields = document.querySelectorAll(DOMstrings.inputDescription + ', ' + DOMstrings.inputValue);
+            
+            // trick to use slice on list instead of array
+            fieldsArr = Array.prototype.slice.call(fields);
+            
+            fieldsArr.forEach(function(current, index, array) {
+                current.value = "";
+            });
+            
+            fieldsArr[0].focus();
+        },
+
         getDOMstrings: function(){
             return DOMstrings;
         }
@@ -141,6 +156,9 @@ var appController = ( function(budjet,UI){
 
         // update ui
         UI.addListItem(newItem,input.type);
+
+        // clear the input fields
+        UI.clearFields();
 
         // recalculate budjet
 
