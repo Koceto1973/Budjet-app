@@ -81,7 +81,7 @@ var UIController =( function(){
             return {
                 type : document.querySelector(DOMstrings.inputType).value,
                 description : document.querySelector(DOMstrings.inputDescription).value,
-                value : document.querySelector(DOMstrings.inputValue).value
+                value: parseFloat(document.querySelector(DOMstrings.inputValue).value)
             };            
         },
 
@@ -145,25 +145,29 @@ var appController = ( function(budjet,UI){
         });
     }   
 
+    var updateBudjet = function () {
+
+    }
+
     function addItem() {
 
         // accept input
         var input = UI.getInput();
         // console.log(input);
 
-        // update budjet
-        var newItem = budjetController.addItem(input.type,input.description,input.value);
+        if (input.description !== "" && !isNaN(input.value) && input.value > 0) {
+            // update budjet
+            var newItem = budjetController.addItem(input.type,input.description,input.value);
 
-        // update ui
-        UI.addListItem(newItem,input.type);
+            // update ui
+            UI.addListItem(newItem,input.type);
 
-        // clear the input fields
-        UI.clearFields();
+            // clear the input fields
+            UI.clearFields();
 
-        // recalculate budjet
-
-        // display budjet
-
+            // recalculate budjet
+            updateBudjet()
+        }
     } 
     
     return {
@@ -178,4 +182,4 @@ var appController = ( function(budjet,UI){
 // app entry point
 appController.init();
 
-budjetController.testing();
+
