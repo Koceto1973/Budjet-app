@@ -1,5 +1,5 @@
-// budjet controller
-var budjetController = ( function(){
+// budget controller
+var budgetController = ( function(){
     
     var Income = function(id, description, value) {
         this.id = id;
@@ -14,7 +14,7 @@ var budjetController = ( function(){
         this.percentage = -1;
     };
 
-    Expense.prototype.calcPercentage = function(totalIncome) {
+    Expense.prototype.calcPercentages = function(totalIncome) {
         if (totalIncome > 0) {
             this.percentage = Math.round((this.value / totalIncome) * 100);
         } else {
@@ -23,7 +23,7 @@ var budjetController = ( function(){
     };
     
     
-    Expense.prototype.getPercentage = function() {
+    Expense.prototype.getPercentages = function() {
         return this.percentage;
     };
 
@@ -130,8 +130,15 @@ var budjetController = ( function(){
             */
             
             data.allItems.exp.forEach(function(cur) {
-               cur.calcPercentage(data.totals.inc);
+               cur.calcPercentages(data.totals.inc);
             });
+        },
+
+        getPercentages: function() {
+            var allPerc = data.allItems.exp.map(function(cur) {
+                return cur.getPercentages();
+            });
+            return allPerc;
         },
 
         getBudget: function() {
@@ -191,8 +198,14 @@ var UIController =( function(){
         var integerPartAsThousandsSeparatedString = integerTripples.join(',');
                 
 
-        return sign + ' ' + integerPartAsThousandsSeparatedString + '.' + decimalPart;
+        return sign + ' ' + integerPartAsThousandsSeparatedString + ( decimalPart !==0 ? ('.' + decimalPart):'');
 
+    };
+
+    var nodeListForEach = function(list, callback) {
+        for (var i = 0; i < list.length; i++) {
+            callback(list[i], i);
+        }
     };
 
     return {
@@ -225,6 +238,13 @@ var UIController =( function(){
             
             // Insert the HTML into the DOM
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
+        },
+
+        deleteListItem: function(selectorID) {
+            
+            var el = document.getElementById(selectorID);
+            el.parentNode.removeChild(el);
+            
         },
 
         clearFields: function() {
@@ -289,6 +309,21 @@ var UIController =( function(){
 
             document.querySelector(DOMstrings.dateLabel).textContent = months[month] + ' ' + year;
         },
+
+        changedType: function() {
+            
+            var fields = document.querySelectorAll(
+                DOMstrings.inputType + ',' +
+                DOMstrings.inputDescription + ',' +
+                DOMstrings.inputValue);
+            
+            nodeListForEach(fields, function(cur) {
+               cur.classList.toggle('red-focus'); 
+            });
+            
+            document.querySelector(DOMstrings.inputBtn).classList.toggle('red');
+            
+        },
         
         // provide html strings to the app controller
         getDOMstrings: function(){
@@ -299,7 +334,7 @@ var UIController =( function(){
 })();
 
 // global app controller
-var appController = ( function(budjet,UI){
+var appController = ( function(budget,UI){
 
     var stringsOfDOM; // html selectors
 
@@ -325,10 +360,10 @@ var appController = ( function(budjet,UI){
     var updateBudget = function() {
         
         // 1. Calculate the budget
-        budjet.calculateBudget();
+        budget.calculateBudget();
         
         // 2. Return the budget
-        var bdgt = budjet.getBudget();
+        var bdgt = budget.getBudget();
         
         // 3. Display the budget on the UI
         UI.displayBudget(bdgt);
@@ -353,8 +388,8 @@ var appController = ( function(budjet,UI){
         // console.log(input);
 
         if (input.description !== "" && !isNaN(input.value) && input.value > 0) {
-            // update budjet
-            var newItem = budjet.addItem(input.type,input.description,input.value);
+            // update budget
+            var newItem = budget.addItem(input.type,input.description,input.value);
 
             // update ui
             UI.addListItem(newItem,input.type);
@@ -362,7 +397,7 @@ var appController = ( function(budjet,UI){
             // clear the input fields
             UI.clearFields();
 
-            // budjet set up
+            // budget set up
             updateBudget();
 
             // percentage set up
@@ -382,6 +417,7 @@ var appController = ( function(budjet,UI){
             //inc-1
             splitID = itemID.split('-');
             type = splitID[0];
+            
             ID = parseInt(splitID[1]);
             
             // 1. delete the item from the data structure
@@ -421,7 +457,7 @@ var appController = ( function(budjet,UI){
         }
     }
 
-})(budjetController,UIController);
+})(budgetController,UIController);
 
 // app entry point
 appController.init();
