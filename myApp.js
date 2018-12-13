@@ -14,6 +14,14 @@ var budjetController = ( function(){
         this.percentage = -1;
     };
 
+    var calculateTotal = function(type) {
+        var sum = 0;
+        data.allItems[type].forEach(function(cur) {
+            sum += cur.value;
+        });
+        data.totals[type] = sum;
+    };
+
     var data = {
         allItems: {
             exp: [],
@@ -28,6 +36,7 @@ var budjetController = ( function(){
     };
 
     return {
+
         addItem: function(type, des, val) {
             var newItem, ID;
             
@@ -56,6 +65,34 @@ var budjetController = ( function(){
             return newItem;
         },
 
+        calculateBudget: function() {
+            
+            // calculate total income and expenses
+            calculateTotal('exp');
+            calculateTotal('inc');
+            
+            // Calculate the budget: income - expenses
+            data.budget = data.totals.inc - data.totals.exp;
+            
+            // calculate the percentage of income that we spent
+            if (data.totals.inc > 0) {
+                data.percentage = Math.round((data.totals.exp / data.totals.inc) * 100);
+            } else {
+                data.percentage = -1;
+            }            
+            
+            // Expense = 100 and income 300, spent 33.333% = 100/300 = 0.3333 * 100
+        },
+
+        getBudget: function() {
+            return {
+                budget: data.budget,
+                totalInc: data.totals.inc,
+                totalExp: data.totals.exp,
+                percentage: data.percentage
+            };
+        },
+
         testing: function() {
             console.log(data);
         }
@@ -73,7 +110,8 @@ var UIController =( function(){
         inputValue: '.add__value',
         inputBtn: '.add__btn',
         incomeContainer: '.income__list',
-        expensesContainer: '.expenses__list'
+        expensesContainer: '.expenses__list',
+        dateLabel: '.budget__title--month'
     }
 
     return {
@@ -123,6 +161,24 @@ var UIController =( function(){
             fieldsArr[0].focus();
         },
 
+        // display current month and year
+        displayMonth: function() {
+            
+            // current date
+            var now = new Date(); //var christmas = new Date(2016, 11, 25);
+            
+            // month as a number 1...12
+            var month = now.getMonth(); 
+            months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            // year
+            year = now.getFullYear();
+
+
+            document.querySelector(DOMstrings.dateLabel).textContent = months[month] + ' ' + year;
+        },
+        
+        // provide html strings to the app controller
         getDOMstrings: function(){
             return DOMstrings;
         }
@@ -133,21 +189,50 @@ var UIController =( function(){
 // global app controller
 var appController = ( function(budjet,UI){
 
+    var stringsOfDOM; // html selectors
+
     var setupEventListeners = function() {
-        var DOM = UI.getDOMstrings();
+        stringsOfDOM = UI.getDOMstrings(); // UI, give me the html selectors
         
-        document.querySelector(DOM.inputBtn).addEventListener('click', addItem);
-        
+        // addItem
+        document.querySelector(stringsOfDOM.inputBtn).addEventListener('click', addItem);
+        // addItem with Enter key
         document.addEventListener('keypress',function(event){
             if ( event.keyCode === 13 || event.which === 13 ) { // event.which for older browsers
                 addItem();
             }
         });
+
+        // delete item
+        document.querySelector(stringsOfDOM.container).addEventListener('click', ctrlDeleteItem);
+        
+        // item type change
+        document.querySelector(stringsOfDOM.inputType).addEventListener('change', UICtrl.changedType); 
     }   
 
-    var updateBudjet = function () {
+    var updateBudget = function() {
+        
+        // 1. Calculate the budget
+        budjet.calculateBudget();
+        
+        // 2. Return the budget
+        var bdgt = budjet.getBudget();
+        
+        // 3. Display the budget on the UI
+        UI.displayBudget(bdgt);
+    };
 
-    }
+    var updatePercentages = function() {
+        
+        // 1. Calculate percentages
+        budget.calculatePercentages();
+        
+        // 2. Read percentages from the budget controller
+        var percentages = budget.getPercentages();
+        
+        // 3. Update the UI with the new percentages
+        UI.displayPercentages(percentages);
+    };
 
     function addItem() {
 
@@ -157,7 +242,7 @@ var appController = ( function(budjet,UI){
 
         if (input.description !== "" && !isNaN(input.value) && input.value > 0) {
             // update budjet
-            var newItem = budjetController.addItem(input.type,input.description,input.value);
+            var newItem = budjet.addItem(input.type,input.description,input.value);
 
             // update ui
             UI.addListItem(newItem,input.type);
@@ -165,15 +250,59 @@ var appController = ( function(budjet,UI){
             // clear the input fields
             UI.clearFields();
 
-            // recalculate budjet
-            updateBudjet()
+            // budjet set up
+            updateBudget();
+
+            // percentage set up
+            updatePercentages()
         }
     } 
+
+    var ctrlDeleteItem = function(event) {
+        var itemID, splitID, type, ID;
+        
+        itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
+        
+        if (itemID) {
+            
+            //inc-1
+            splitID = itemID.split('-');
+            type = splitID[0];
+            ID = parseInt(splitID[1]);
+            
+            // 1. delete the item from the data structure
+            budget.deleteItem(type, ID);
+            
+            // 2. Delete the item from the UI
+            UI.deleteListItem(itemID);
+            
+            // 3. Update and show the new budget
+            updateBudget();
+            
+            // 4. Calculate and update percentages
+            updatePercentages();
+        }
+    };
+
     
     return {
+
+        // initialization routine
         init: function() {
-            console.log('App has started!');
+
+            // activate controls
             setupEventListeners();
+
+            // set ui initially
+            UI.displayMonth();
+            UI.displayBudget({
+                budget: 0,
+                totalInc: 0,
+                totalExp: 0,
+                percentage: -1
+            });
+
+            console.log('App has started!');
         }
     }
 
