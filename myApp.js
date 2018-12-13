@@ -111,8 +111,39 @@ var UIController =( function(){
         inputBtn: '.add__btn',
         incomeContainer: '.income__list',
         expensesContainer: '.expenses__list',
+        budgetLabel: '.budget__value',
+        incomeLabel: '.budget__income--value',
+        expensesLabel: '.budget__expenses--value',
+        percentageLabel: '.budget__expenses--percentage',
+        container: '.container',
+        expensesPercLabel: '.item__percentage',
         dateLabel: '.budget__title--month'
     }
+
+    var formatNumber = function(number) {
+        
+        // sign format
+        var sign = (number =0 ? '' : (number >0 ? '+' : '-' ));
+        
+        // two digits decimal
+        var number = Math.floor(Math.abs(number)*100);
+        var integerPart = Math.floor(number/100);
+        var decimalPart = number-integerPart*100;
+        
+        // thousands separator
+        var integerTripples = [];
+        while (integerPart>999) {
+            var tripple = integerPart - 1000*Math.floor(integerPart/1000);
+            integerTripples.unshift(tripple);
+            integerPart = (integerPart - tripple)/1000;
+        };
+        integerTripples.unshift(integerPart);
+        var integerPartAsThousandsSeparatedString = integerTripples.join(',');
+                
+
+        return sign + ' ' + integerPartAsThousandsSeparatedString + '.' + decimalPart;
+
+    };
 
     return {
         getInput: function(){
@@ -159,6 +190,37 @@ var UIController =( function(){
             });
             
             fieldsArr[0].focus();
+        },
+
+        displayBudget: function(obj) {
+
+            document.querySelector(DOMstrings.budgetLabel).textContent = formatNumber(obj.budget);
+            document.querySelector(DOMstrings.incomeLabel).textContent = formatNumber(obj.totalInc);
+            document.querySelector(DOMstrings.expensesLabel).textContent = formatNumber(obj.totalExp*(-1));
+            
+            // display percentage correctly
+            if (obj.percentage > 0) {
+                document.querySelector(DOMstrings.percentageLabel).textContent = obj.percentage + '%';
+            } else {
+                document.querySelector(DOMstrings.percentageLabel).textContent = '---';
+            }
+            
+        },
+        
+        
+        displayPercentages: function(percentages) {
+            
+            var fields = document.querySelectorAll(DOMstrings.expensesPercLabel);
+            
+            nodeListForEach(fields, function(current, index) {
+                
+                if (percentages[index] > 0) {
+                    current.textContent = percentages[index] + '%';
+                } else {
+                    current.textContent = '---';
+                }
+            });
+            
         },
 
         // display current month and year
