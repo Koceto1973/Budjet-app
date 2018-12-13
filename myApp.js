@@ -14,6 +14,19 @@ var budjetController = ( function(){
         this.percentage = -1;
     };
 
+    Expense.prototype.calcPercentage = function(totalIncome) {
+        if (totalIncome > 0) {
+            this.percentage = Math.round((this.value / totalIncome) * 100);
+        } else {
+            this.percentage = -1;
+        }
+    };
+    
+    
+    Expense.prototype.getPercentage = function() {
+        return this.percentage;
+    };
+
     var calculateTotal = function(type) {
         var sum = 0;
         data.allItems[type].forEach(function(cur) {
@@ -65,6 +78,26 @@ var budjetController = ( function(){
             return newItem;
         },
 
+        deleteItem: function(type, id) {
+            var ids, index;
+            
+            // id = 6
+            //data.allItems[type][id];
+            // ids = [1 2 4  8]
+            //index = 3
+            
+            ids = data.allItems[type].map(function(current) {
+                return current.id;
+            });
+
+            index = ids.indexOf(id);
+
+            if (index !== -1) {
+                data.allItems[type].splice(index, 1);
+            }
+            
+        },
+
         calculateBudget: function() {
             
             // calculate total income and expenses
@@ -82,6 +115,23 @@ var budjetController = ( function(){
             }            
             
             // Expense = 100 and income 300, spent 33.333% = 100/300 = 0.3333 * 100
+        },
+
+        calculatePercentages: function() {
+            
+            /*
+            a=20
+            b=10
+            c=40
+            income = 100
+            a=20/100=20%
+            b=10/100=10%
+            c=40/100=40%
+            */
+            
+            data.allItems.exp.forEach(function(cur) {
+               cur.calcPercentage(data.totals.inc);
+            });
         },
 
         getBudget: function() {
@@ -123,7 +173,7 @@ var UIController =( function(){
     var formatNumber = function(number) {
         
         // sign format
-        var sign = (number =0 ? '' : (number >0 ? '+' : '-' ));
+        var sign = (number === 0 ? '' : (number >0 ? '+' : '-' ));
         
         // two digits decimal
         var number = Math.floor(Math.abs(number)*100);
@@ -265,11 +315,11 @@ var appController = ( function(budjet,UI){
             }
         });
 
-        // delete item
-        document.querySelector(stringsOfDOM.container).addEventListener('click', ctrlDeleteItem);
+        // delete item by catching the bubbling event
+        document.querySelector(stringsOfDOM.container).addEventListener('click', DeleteItem);
         
         // item type change
-        document.querySelector(stringsOfDOM.inputType).addEventListener('change', UICtrl.changedType); 
+        document.querySelector(stringsOfDOM.inputType).addEventListener('change', UI.changedType); 
     }   
 
     var updateBudget = function() {
@@ -320,11 +370,13 @@ var appController = ( function(budjet,UI){
         }
     } 
 
-    var ctrlDeleteItem = function(event) {
+    var DeleteItem = function(event) {
         var itemID, splitID, type, ID;
         
+        // get the element by DOM traversal
         itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
         
+        // only our predefined buttons have hard-coded ids
         if (itemID) {
             
             //inc-1
@@ -357,6 +409,7 @@ var appController = ( function(budjet,UI){
 
             // set ui initially
             UI.displayMonth();
+            // object argument constructed and passed 'on the run'
             UI.displayBudget({
                 budget: 0,
                 totalInc: 0,
