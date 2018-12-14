@@ -104,7 +104,7 @@ var budgetController = ( function(){
             
             // Calculate the budget: income - expenses
             data.budget = data.totals.inc - data.totals.exp;
-            
+                        
             // calculate the percentage of income that we spent
             if (data.totals.inc > 0) {
                 data.percentage = Math.round((data.totals.exp / data.totals.inc) * 100);
@@ -176,14 +176,15 @@ var UIController =( function(){
         var decimalPart = number-integerPart*100;
         
         // thousands separator
-        var integerTripples = [];
+        var integerTripplesAsStrings = [];
         while (integerPart>999) {
             var tripple = integerPart - 1000*Math.floor(integerPart/1000);
-            integerTripples.unshift(tripple);
             integerPart = (integerPart - tripple)/1000;
+            var trippleAsString = (tripple>99? tripple:(tripple>9? '0'+tripple:'00'+tripple));
+            integerTripplesAsStrings.unshift(trippleAsString);            
         };
-        integerTripples.unshift(integerPart);
-        var integerPartAsThousandsSeparatedString = integerTripples.join(',');                
+        integerTripplesAsStrings.unshift(integerPart);
+        var integerPartAsThousandsSeparatedString = integerTripplesAsStrings.join(',');                
 
         return sign + ' ' + integerPartAsThousandsSeparatedString + ( decimalPart !==0 ? ('.' + decimalPart):'');
     };
@@ -199,7 +200,7 @@ var UIController =( function(){
             return {
                 type : document.querySelector(DOMstrings.inputType).value,
                 description : document.querySelector(DOMstrings.inputDescription).value,
-                value: document.querySelector(DOMstrings.inputValue).value)
+                value: parseFloat(document.querySelector(DOMstrings.inputValue).value)
             };            
         },
 
@@ -226,11 +227,9 @@ var UIController =( function(){
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
         },
 
-        deleteListItem: function(selectorID) {
-            
+        deleteListItem: function(selectorID) {            
             var el = document.getElementById(selectorID);
-            el.parentNode.removeChild(el);
-            
+            el.parentNode.removeChild(el);            
         },
 
         clearFields: function() {
@@ -346,7 +345,7 @@ var appController = ( function(budget,UI){
         
         // 2. Return the budget
         var bdgt = budget.getBudget();
-        
+                
         // 3. Display the budget on the UI
         UI.displayBudget(bdgt);
     };
@@ -367,8 +366,7 @@ var appController = ( function(budget,UI){
 
         // accept input
         var input = UI.getInput();
-        // console.log(input);
-
+        
         if (input.description !== "" && !isNaN(input.value) && input.value > 0) {
             // update budget
             var newItem = budget.addItem(input.type,input.description,input.value);
