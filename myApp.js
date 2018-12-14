@@ -20,8 +20,7 @@ var budgetController = ( function(){
         } else {
             this.percentage = -1;
         }
-    };
-    
+    };    
     
     Expense.prototype.getPercentages = function() {
         return this.percentage;
@@ -79,18 +78,17 @@ var budgetController = ( function(){
         },
 
         deleteItem: function(type, id) {
-            var ids, index;
-            
+                        
             // id = 6
             //data.allItems[type][id];
             // ids = [1 2 4  8]
             //index = 3
             
-            ids = data.allItems[type].map(function(current) {
+            var ids = data.allItems[type].map(function(current) {
                 return current.id;
             });
 
-            index = ids.indexOf(id);
+            var index = ids.indexOf(id);
 
             if (index !== -1) {
                 data.allItems[type].splice(index, 1);
@@ -118,16 +116,6 @@ var budgetController = ( function(){
         },
 
         calculatePercentages: function() {
-            
-            /*
-            a=20
-            b=10
-            c=40
-            income = 100
-            a=20/100=20%
-            b=10/100=10%
-            c=40/100=40%
-            */
             
             data.allItems.exp.forEach(function(cur) {
                cur.calcPercentages(data.totals.inc);
@@ -195,11 +183,9 @@ var UIController =( function(){
             integerPart = (integerPart - tripple)/1000;
         };
         integerTripples.unshift(integerPart);
-        var integerPartAsThousandsSeparatedString = integerTripples.join(',');
-                
+        var integerPartAsThousandsSeparatedString = integerTripples.join(',');                
 
         return sign + ' ' + integerPartAsThousandsSeparatedString + ( decimalPart !==0 ? ('.' + decimalPart):'');
-
     };
 
     var nodeListForEach = function(list, callback) {
@@ -275,8 +261,7 @@ var UIController =( function(){
                 document.querySelector(DOMstrings.percentageLabel).textContent = '---';
             }
             
-        },
-        
+        },        
         
         displayPercentages: function(percentages) {
             
@@ -289,8 +274,7 @@ var UIController =( function(){
                 } else {
                     current.textContent = '---';
                 }
-            });
-            
+            });            
         },
 
         // display current month and year
@@ -306,7 +290,6 @@ var UIController =( function(){
             // year
             year = now.getFullYear();
 
-
             document.querySelector(DOMstrings.dateLabel).textContent = months[month] + ' ' + year;
         },
 
@@ -321,8 +304,7 @@ var UIController =( function(){
                cur.classList.toggle('red-focus'); 
             });
             
-            document.querySelector(DOMstrings.inputBtn).classList.toggle('red');
-            
+            document.querySelector(DOMstrings.inputBtn).classList.toggle('red');            
         },
         
         // provide html strings to the app controller
@@ -333,7 +315,7 @@ var UIController =( function(){
 
 })();
 
-// global app controller
+// global app controller, knows budget and ui and uses their interface functions
 var appController = ( function(budget,UI){
 
     var stringsOfDOM; // html selectors
@@ -353,7 +335,7 @@ var appController = ( function(budget,UI){
         // delete item by catching the bubbling event
         document.querySelector(stringsOfDOM.container).addEventListener('click', DeleteItem);
         
-        // item type change
+        // add item type change
         document.querySelector(stringsOfDOM.inputType).addEventListener('change', UI.changedType); 
     }   
 
@@ -406,19 +388,18 @@ var appController = ( function(budget,UI){
     } 
 
     var DeleteItem = function(event) {
-        var itemID, splitID, type, ID;
-        
-        // get the element by DOM traversal
-        itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
+                
+        // get the element by DOM traversal, get to parent, then .id
+        var itemID = event.target.parentNode.parentNode.parentNode.parentNode.id;
         
         // only our predefined buttons have hard-coded ids
         if (itemID) {
             
             //inc-1
-            splitID = itemID.split('-');
-            type = splitID[0];
+            var splitID = itemID.split('-');
+            var type = splitID[0];
             
-            ID = parseInt(splitID[1]);
+            var ID = parseInt(splitID[1]);
             
             // 1. delete the item from the data structure
             budget.deleteItem(type, ID);
@@ -461,5 +442,7 @@ var appController = ( function(budget,UI){
 
 // app entry point
 appController.init();
+
+
 
 
